@@ -1,12 +1,13 @@
 <script>
+  //Init
   let userObject = null;
   const userbase = window.userbase;
-
   let authPromise = userbase
     .init({ appId: "5c55b6f7-bd53-4707-877d-0e4a87d274c6" })
     .then(({ user }) => (userObject = user));
-  let username, password;
 
+  //Auth
+  let username, password;
   const signIn = () =>
     (authPromise = userbase
       .signIn({ username, password })
@@ -20,10 +21,21 @@
   const signOut = () => {
     authPromise = userbase.signOut().then((userObject = null));
   };
+
+  $: console.log(userObject);
+
+  //Database
+  let toDoList = [],
+    newToDo = "";
+  const dataBaseName = "toDoList";
+  const changeHandler = items => {
+    toDoList = items;
+  };
+  $: if (userObject) userbase.openDatabase({ dataBaseName, changeHandler });
 </script>
 
 <style>
-  .form-container {
+  .container {
     display: flex;
     justify-content: center;
   }
@@ -44,7 +56,7 @@
   <h3>Loading...</h3>
 {:then _}
   {#if !userObject}
-    <div class="form-container">
+    <div class="container">
       <form>
         <label for="username">Username</label>
         <input id="username" type="text" bind:value={username} />
@@ -55,8 +67,13 @@
       </form>
     </div>
   {:else}
-    <h1>Hi, {username}!</h1>
-    <button class="sign-out" on:click={signOut}>Sign Out</button>
+    <div class="container">
+      <h1>Hi, {username}!</h1>
+      <button class="sign-out" on:click={signOut}>Sign Out</button>
+      <label for="new-todo">New To Do</label>
+      <input id="new-todo" type="text" bind:value={newToDo} />
+      <button on:click={addToDo}>Add Today</button>
+    </div>
   {/if}
 
 {:catch error}
