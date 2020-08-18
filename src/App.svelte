@@ -25,13 +25,23 @@
   $: console.log(userObject);
 
   //Database
+  let toDoPromise;
   let toDoList = [],
     newToDo = "";
-  const dataBaseName = "toDoList";
+  const databaseName = "toDoList";
   const changeHandler = items => {
     toDoList = items;
   };
-  $: if (userObject) userbase.openDatabase({ dataBaseName, changeHandler });
+  $: if (userObject)
+    toDoPromise = userbase.openDatabase({ databaseName, changeHandler });
+  const addToDo = item => {
+    userbase.insertItem({ databaseName, item: newToDo });
+    newToDo = "";
+  };
+
+  const deleteToDo = itemId => {
+    toDoPromise = userbase.deleteItem({ databaseName, itemId });
+  };
 </script>
 
 <style>
@@ -50,6 +60,13 @@
     top: 10px;
     right: 10px;
   }
+  .signin-header {
+    width: 100%;
+  }
+  .to-do-row {
+    display: flex;
+    flex-direction: row;
+  }
 </style>
 
 {#await authPromise}
@@ -67,13 +84,33 @@
       </form>
     </div>
   {:else}
-    <div class="container">
+    <div class="signin-header">
       <h1>Hi, {username}!</h1>
       <button class="sign-out" on:click={signOut}>Sign Out</button>
-      <label for="new-todo">New To Do</label>
-      <input id="new-todo" type="text" bind:value={newToDo} />
-      <button on:click={addToDo}>Add Today</button>
     </div>
+    {#await toDoPromise}
+      <h3>Loading To Do List...</h3>
+    {:then _}
+      <div class="container">
+        <label for="new-todo">Add Item</label>
+        <input id="new-todo" type="text" bind:value={newToDo} />
+        <button on:click={addToDo}>Add To Do</button>
+      </div>
+      {#each toDoList as { item, itemId }, index}
+        <div class="to-do-row">
+          <h4>{item}</h4>
+          <button
+            on:click={() => {
+              deleteToDo(itemId);
+            }}>
+            X
+          </button>
+        </div>
+      {/each}
+
+    {:catch error}
+      There was a problem {error}
+    {/await}
   {/if}
 
 {:catch error}
