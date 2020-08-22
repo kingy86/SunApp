@@ -54,6 +54,10 @@
     flex-direction: column;
     align-items: center;
     width: 50%;
+    margin-top: 50px;
+  }
+  label {
+    font-family: "Open Sans", sans-serif;
   }
   .sign-out {
     position: absolute;
